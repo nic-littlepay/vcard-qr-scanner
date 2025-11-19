@@ -1,0 +1,43 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  margin: 0;
+  padding: 0;
+}
+main {
+  max-width: 400px;
+  margin: 2em auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1em;
+}
+h1 {
+  font-size: 1.5em;
+  margin-bottom: 1em;
+}
+#qr-reader {
+  margin-bottom: 1em;
+}
+#vcard-result {
+  margin-top: 1em;
+}
+.hidden {
+  display: none;
+}
+button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.75em 1.5em;
+  border-radius: 4px;
+  font-size: 1em;
+  cursor: pointer;
+}
+button:disabled {
+  background: #aaa;
+}
+#form-status {
+  margin-top: 1em;
+  color: green;
+}

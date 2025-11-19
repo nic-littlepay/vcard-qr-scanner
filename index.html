@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vCard QR Scanner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Scan vCard QR Code</h1>
+    <div id="qr-reader" style="width:100%"></div>
+    <div id="vcard-result" class="hidden">
+      <h2>vCard Data</h2>
+      <div id="vcard-fields"></div>
+      <button id="submit-btn">Submit to Google Form</button>
+    </div>
+    <div id="form-status"></div>
+  </main>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/vcard-parser@1.0.6/dist/vcard-parser.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
