@@ -69,15 +69,31 @@ submitBtn.addEventListener("click", () => {
   });
 });
 
-Html5Qrcode.getCameras().then(cameras => {
-  if (cameras && cameras.length) {
+// Initialize camera
+formStatusDiv.textContent = "Initializing camera...";
+
+Html5Qrcode.getCameras()
+  .then(cameras => {
+    console.log("Available cameras:", cameras);
+    
+    if (!cameras || cameras.length === 0) {
+      throw new Error("No camera found on this device.");
+    }
+    
+    // Use the last camera (usually back camera on mobile, or first available on desktop)
+    const cameraId = cameras[cameras.length - 1].id;
+    console.log("Using camera ID:", cameraId);
+    
+    formStatusDiv.textContent = "Starting camera...";
+    
     qrReader.start(
-      cameras[0].id,
+      cameraId,
       {
         fps: 10,
-        qrbox: 250
+        qrbox: { width: 250, height: 250 }
       },
       (decodedText) => {
+        console.log("QR Code detected:", decodedText);
         resetUI();
         const parsed = parseVCard(decodedText);
         if (parsed) {
@@ -89,12 +105,31 @@ Html5Qrcode.getCameras().then(cameras => {
         }
       },
       (errorMessage) => {
-        // Ignore scan errors
+        // Ignore scan errors (these happen continuously when no QR code is detected)
       }
-    );
-  } else {
-    formStatusDiv.textContent = "No camera found.";
-  }
-}).catch(() => {
-  formStatusDiv.textContent = "Camera access denied.";
-});
+    ).then(() => {
+      formStatusDiv.textContent = "";
+      console.log("Camera started successfully");
+    }).catch(err => {
+      console.error("Error starting camera:", err);
+      throw err;
+    });
+  })
+  .catch(err => {
+    console.error("Camera error:", err);
+    let errorMsg = "Camera error: ";
+    if (err.name === 'NotAllowedError') {
+      errorMsg += "Permission denied. Please allow camera access.";
+    } else if (err.name === 'NotFoundError') {
+      errorMsg += "No camera found.";
+    } else if (err.name === 'NotReadableError') {
+      errorMsg += "Camera is already in use by another application.";
+    } else if (err.name === 'OverconstrainedError') {
+      errorMsg += "Camera doesn't meet requirements.";
+    } else if (err.message) {
+      errorMsg += err.message;
+    } else {
+      errorMsg += String(err);
+    }
+    formStatusDiv.textContent = errorMsg;
+  });
