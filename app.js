@@ -63,22 +63,46 @@ function parseVCard(raw) {
   }
 }
 
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdrk_Oa8TyVOMQ8qUZ0i_Uw7Zn0n2Xl64ZJI0sMwrvleY8ZGQ"
+
 function displayVCard(data) {
+  const missingFields = [];
+  if (!data.name) missingFields.push('Name');
+  if (!data.email) missingFields.push('Email');
+  
   vcardFieldsDiv.innerHTML = `
-    <p><strong>Name:</strong> ${data.name}</p>
-    <p><strong>Email:</strong> ${data.email}</p>
-    <p><strong>Company:</strong> ${data.company}</p>
-    <p><strong>Position:</strong> ${data.title}</p>
+    <p><strong>Name:</strong> ${data.name || '<em>Not found</em>'}</p>
+    <p><strong>Email:</strong> ${data.email || '<em>Not found</em>'}</p>
+    <p><strong>Company:</strong> ${data.company || '<em>Not found</em>'}</p>
+    <p><strong>Position:</strong> ${data.title || '<em>Not found</em>'}</p>
   `;
+  
+  if (missingFields.length > 0) {
+    formStatusDiv.innerHTML = `
+      <p class="error">⚠️ Missing required field${missingFields.length > 1 ? 's' : ''}: ${missingFields.join(' and ')}</p>
+      <button id="manual-form-btn" class="secondary-btn">Fill Form Manually</button>
+    `;
+    submitBtn.style.display = 'none';
+    
+    // Add event listener for manual form button
+    document.getElementById('manual-form-btn').addEventListener('click', () => {
+      window.open(GOOGLE_FORM_URL + '/viewform', '_blank');
+    });
+  } else {
+    formStatusDiv.textContent = '';
+    submitBtn.style.display = 'block';
+  }
+  
   vcardResultDiv.classList.remove("hidden");
 }
 
 function resetUI() {
   vcardResultDiv.classList.add("hidden");
   formStatusDiv.textContent = "";
+  submitBtn.style.display = 'block';
 }
 // TODO: replace with actual Google Form URL
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdrk_Oa8TyVOMQ8qUZ0i_Uw7Zn0n2Xl64ZJI0sMwrvleY8ZGQ/formResponse";
+const GOOGLE_FORM_RESPONSE_URL = GOOGLE_FORM_URL + "/formResponse";
 
 const FIELD_NAME = "entry.291539298";
 const FIELD_EMAIL = "entry.138688578";
@@ -86,24 +110,34 @@ const FIELD_COMPANY = "entry.555479314";
 const FIELD_TITLE = "entry.1499158871";
 
 submitBtn.addEventListener("click", () => {
+  // Validate required fields
+  if (!vcardData.name || !vcardData.email) {
+    formStatusDiv.innerHTML = '<p class="error">Cannot submit: Name and Email are required.</p>';
+    return;
+  }
+  
   submitBtn.disabled = true;
   formStatusDiv.textContent = "Submitting...";
+  formStatusDiv.className = '';
+  
   // Prepare form data
   const formData = new FormData();
   formData.append(FIELD_NAME, vcardData.name);
   formData.append(FIELD_EMAIL, vcardData.email);
-  formData.append(FIELD_COMPANY, vcardData.company);
-  formData.append(FIELD_TITLE, vcardData.title);
+  formData.append(FIELD_COMPANY, vcardData.company || '');
+  formData.append(FIELD_TITLE, vcardData.title || '');
 
-  fetch(GOOGLE_FORM_URL, {
+  fetch(GOOGLE_FORM_RESPONSE_URL, {
     method: "POST",
     mode: "no-cors",
     body: formData
   }).then(() => {
-    formStatusDiv.textContent = "Submitted!";
+    formStatusDiv.textContent = "✓ Submitted successfully!";
+    formStatusDiv.className = 'success';
     submitBtn.disabled = false;
   }).catch(() => {
     formStatusDiv.textContent = "Error submitting form.";
+    formStatusDiv.className = 'error';
     submitBtn.disabled = false;
   });
 });
