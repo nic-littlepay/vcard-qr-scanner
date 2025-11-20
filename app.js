@@ -11,15 +11,54 @@ let vcardData = {};
 
 function parseVCard(raw) {
   try {
-    const vcard = window.vCardParser.parse(raw);
-    // Extract fields
-    return {
-      name: vcard.fn || "",
-      email: vcard.email || "",
-      company: vcard.org || "",
-      title: vcard.title || ""
+    console.log("Raw vCard data:", raw);
+    
+    // Simple vCard parser - parse the text directly
+    const lines = raw.split(/\r?\n/);
+    const data = {
+      name: "",
+      email: "",
+      company: "",
+      title: ""
     };
+    
+    for (let line of lines) {
+      line = line.trim();
+      
+      if (line.startsWith('FN:')) {
+        data.name = line.substring(3).trim();
+      } else if (line.startsWith('N:')) {
+        // Handle N:LastName;FirstName format
+        const nameParts = line.substring(2).split(';');
+        if (nameParts.length >= 2) {
+          data.name = `${nameParts[1]} ${nameParts[0]}`.trim();
+        } else {
+          data.name = line.substring(2).trim();
+        }
+      } else if (line.startsWith('EMAIL')) {
+        // Handle EMAIL:email@example.com or EMAIL;TYPE=WORK:email@example.com
+        const emailMatch = line.match(/EMAIL[^:]*:(.+)/);
+        if (emailMatch) {
+          data.email = emailMatch[1].trim();
+        }
+      } else if (line.startsWith('ORG:')) {
+        data.company = line.substring(4).trim();
+      } else if (line.startsWith('TITLE:')) {
+        data.title = line.substring(6).trim();
+      } else if (line.startsWith('ROLE:') && !data.title) {
+        // Use ROLE as fallback if TITLE is not set
+        data.title = line.substring(5).trim();
+      }
+    }
+    
+    // Return null if no useful data was found
+    if (!data.name && !data.email && !data.company && !data.title) {
+      return null;
+    }
+    
+    return data;
   } catch (e) {
+    console.error("vCard parsing error:", e);
     return null;
   }
 }
@@ -38,13 +77,13 @@ function resetUI() {
   vcardResultDiv.classList.add("hidden");
   formStatusDiv.textContent = "";
 }
+// TODO: replace with actual Google Form URL
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdrk_Oa8TyVOMQ8qUZ0i_Uw7Zn0n2Xl64ZJI0sMwrvleY8ZGQ/formResponse";
 
-// Replace with your Google Form field entry IDs
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/your-form-id/formResponse";
-const FIELD_NAME = "entry.123456";
-const FIELD_EMAIL = "entry.234567";
-const FIELD_COMPANY = "entry.345678";
-const FIELD_TITLE = "entry.456789";
+const FIELD_NAME = "entry.291539298";
+const FIELD_EMAIL = "entry.138688578";
+const FIELD_COMPANY = "entry.555479314";
+const FIELD_TITLE = "entry.1499158871";
 
 submitBtn.addEventListener("click", () => {
   submitBtn.disabled = true;
