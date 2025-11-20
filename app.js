@@ -63,6 +63,7 @@ function parseVCard(raw) {
   }
 }
 
+// TODO: update this with the form provided by People team
 const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdrk_Oa8TyVOMQ8qUZ0i_Uw7Zn0n2Xl64ZJI0sMwrvleY8ZGQ"
 
 function displayVCard(data) {
@@ -104,6 +105,7 @@ function resetUI() {
 // TODO: replace with actual Google Form URL
 const GOOGLE_FORM_RESPONSE_URL = GOOGLE_FORM_URL + "/formResponse";
 
+// TODO: replace with actual Google Form field ids from People team form
 const FIELD_NAME = "entry.291539298";
 const FIELD_EMAIL = "entry.138688578";
 const FIELD_COMPANY = "entry.555479314";
