@@ -63,8 +63,7 @@ function parseVCard(raw) {
   }
 }
 
-const GOOGLE_FORM_ID = '196QFNVTpXD1omtFONwSgt_Is3aZjTIL4jWBb4pYKXmQ'
-const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/' + GOOGLE_FORM_ID
+const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeliYa-Kgupy2QulCMhbAbgbSxOV1zHOwJ_tMdpf1kd32vM9w'
 
 function displayVCard(data) {
   const missingFields = [];
@@ -87,7 +86,7 @@ function displayVCard(data) {
     
     // Add event listener for manual form button
     document.getElementById('manual-form-btn').addEventListener('click', () => {
-      window.open('https://docs.google.com/forms/d/' + GOOGLE_FORM_ID + '/viewform', '_blank');
+      window.open(GOOGLE_FORM_URL + '/viewform', '_blank');
     });
   } else {
     formStatusDiv.textContent = '';
@@ -102,7 +101,69 @@ function resetUI() {
   formStatusDiv.textContent = "";
   submitBtn.style.display = 'block';
 }
-// TODO: replace with actual Google Form URL
+
+function startCamera() {
+  formStatusDiv.textContent = "Starting camera...";
+  formStatusDiv.className = '';
+  
+  Html5Qrcode.getCameras()
+    .then(cameras => {
+      console.log("Available cameras:", cameras);
+      
+      if (!cameras || cameras.length === 0) {
+        throw new Error("No camera found on this device.");
+      }
+      
+      const cameraId = cameras[cameras.length - 1].id;
+      console.log("Using camera ID:", cameraId);
+      
+      return qrReader.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        (decodedText) => {
+          console.log("QR Code detected:", decodedText);
+          resetUI();
+          const parsed = parseVCard(decodedText);
+          if (parsed) {
+            vcardData = parsed;
+            displayVCard(parsed);
+            qrReader.stop();
+          } else {
+            formStatusDiv.textContent = "Invalid vCard data.";
+          }
+        },
+        (errorMessage) => {
+          // Ignore scan errors (these happen continuously when no QR code is detected)
+        }
+      );
+    })
+    .then(() => {
+      formStatusDiv.textContent = "";
+      console.log("Camera started successfully");
+    })
+    .catch(err => {
+      console.error("Camera error:", err);
+      let errorMsg = "Camera error: ";
+      if (err.name === 'NotAllowedError') {
+        errorMsg += "Permission denied. Please allow camera access.";
+      } else if (err.name === 'NotFoundError') {
+        errorMsg += "No camera found.";
+      } else if (err.name === 'NotReadableError') {
+        errorMsg += "Camera is already in use by another application.";
+      } else if (err.name === 'OverconstrainedError') {
+        errorMsg += "Camera doesn't meet requirements.";
+      } else if (err.message) {
+        errorMsg += err.message;
+      } else {
+        errorMsg += String(err);
+      }
+      formStatusDiv.textContent = errorMsg;
+    });
+}
+
 const GOOGLE_FORM_RESPONSE_URL = GOOGLE_FORM_URL + "/formResponse";
 
 const FIELD_NAME = "entry.2075602243";
@@ -133,77 +194,25 @@ submitBtn.addEventListener("click", () => {
     mode: "no-cors",
     body: formData
   }).then(() => {
-    formStatusDiv.textContent = "✓ Submitted successfully!";
+    formStatusDiv.innerHTML = `
+      <p>✓ Submitted successfully!</p>
+      <button id="scan-another-btn" class="secondary-btn">Scan Another Code</button>
+    `;
     formStatusDiv.className = 'success';
-    submitBtn.disabled = false;
+    submitBtn.style.display = 'none';
+    
+    // Add event listener for scan another button
+    document.getElementById('scan-another-btn').addEventListener('click', () => {
+      resetUI();
+      startCamera();
+    });
   }).catch(() => {
+    // Note: with mode: "no-cors", I'm fairly sure fetch will never reject, so we're not able to catch bad http reponses here
     formStatusDiv.textContent = "Error submitting form.";
     formStatusDiv.className = 'error';
     submitBtn.disabled = false;
   });
 });
 
-// Initialize camera
-formStatusDiv.textContent = "Initializing camera...";
-
-Html5Qrcode.getCameras()
-  .then(cameras => {
-    console.log("Available cameras:", cameras);
-    
-    if (!cameras || cameras.length === 0) {
-      throw new Error("No camera found on this device.");
-    }
-    
-    // Use the last camera (usually back camera on mobile, or first available on desktop)
-    const cameraId = cameras[cameras.length - 1].id;
-    console.log("Using camera ID:", cameraId);
-    
-    formStatusDiv.textContent = "Starting camera...";
-    
-    qrReader.start(
-      cameraId,
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 }
-      },
-      (decodedText) => {
-        console.log("QR Code detected:", decodedText);
-        resetUI();
-        const parsed = parseVCard(decodedText);
-        if (parsed) {
-          vcardData = parsed;
-          displayVCard(parsed);
-          qrReader.stop();
-        } else {
-          formStatusDiv.textContent = "Invalid vCard data.";
-        }
-      },
-      (errorMessage) => {
-        // Ignore scan errors (these happen continuously when no QR code is detected)
-      }
-    ).then(() => {
-      formStatusDiv.textContent = "";
-      console.log("Camera started successfully");
-    }).catch(err => {
-      console.error("Error starting camera:", err);
-      throw err;
-    });
-  })
-  .catch(err => {
-    console.error("Camera error:", err);
-    let errorMsg = "Camera error: ";
-    if (err.name === 'NotAllowedError') {
-      errorMsg += "Permission denied. Please allow camera access.";
-    } else if (err.name === 'NotFoundError') {
-      errorMsg += "No camera found.";
-    } else if (err.name === 'NotReadableError') {
-      errorMsg += "Camera is already in use by another application.";
-    } else if (err.name === 'OverconstrainedError') {
-      errorMsg += "Camera doesn't meet requirements.";
-    } else if (err.message) {
-      errorMsg += err.message;
-    } else {
-      errorMsg += String(err);
-    }
-    formStatusDiv.textContent = errorMsg;
-  });
+// Initialize camera on page load
+startCamera();
