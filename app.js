@@ -63,8 +63,8 @@ function parseVCard(raw) {
   }
 }
 
-// TODO: update this with the form provided by People team
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdrk_Oa8TyVOMQ8qUZ0i_Uw7Zn0n2Xl64ZJI0sMwrvleY8ZGQ"
+const GOOGLE_FORM_ID = '196QFNVTpXD1omtFONwSgt_Is3aZjTIL4jWBb4pYKXmQ'
+const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/' + GOOGLE_FORM_ID
 
 function displayVCard(data) {
   const missingFields = [];
@@ -87,7 +87,7 @@ function displayVCard(data) {
     
     // Add event listener for manual form button
     document.getElementById('manual-form-btn').addEventListener('click', () => {
-      window.open(GOOGLE_FORM_URL + '/viewform', '_blank');
+      window.open('https://docs.google.com/forms/d/' + GOOGLE_FORM_ID + '/viewform', '_blank');
     });
   } else {
     formStatusDiv.textContent = '';
@@ -105,11 +105,10 @@ function resetUI() {
 // TODO: replace with actual Google Form URL
 const GOOGLE_FORM_RESPONSE_URL = GOOGLE_FORM_URL + "/formResponse";
 
-// TODO: replace with actual Google Form field ids from People team form
-const FIELD_NAME = "entry.291539298";
-const FIELD_EMAIL = "entry.138688578";
-const FIELD_COMPANY = "entry.555479314";
-const FIELD_TITLE = "entry.1499158871";
+const FIELD_NAME = "entry.2075602243";
+const FIELD_EMAIL = "entry.415465267";
+const FIELD_COMPANY = "entry.1991828843";
+const FIELD_TITLE = "entry.791136885";
 
 submitBtn.addEventListener("click", () => {
   // Validate required fields
