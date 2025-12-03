@@ -118,10 +118,17 @@ function startCamera() {
       console.log("Using camera ID:", cameraId);
       
       return qrReader.start(
-        cameraId,
+        { facingMode: "environment" },  // Use environment camera explicitly for better iOS compatibility
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 }
+          qrbox: { width: 300, height: 300 },  // Larger scanning area for iOS
+          aspectRatio: 1.0,
+          // iOS-specific settings for better autofocus
+          videoConstraints: {
+            facingMode: "environment",
+            focusMode: "continuous",
+            advanced: [{ focusMode: "continuous" }, { torch: false }]
+          }
         },
         (decodedText) => {
           console.log("QR Code detected:", decodedText);
@@ -186,8 +193,8 @@ submitBtn.addEventListener("click", () => {
   const formData = new FormData();
   formData.append(FIELD_NAME, vcardData.name);
   formData.append(FIELD_EMAIL, vcardData.email);
-  formData.append(FIELD_COMPANY, vcardData.company || '');
-  formData.append(FIELD_TITLE, vcardData.title || '');
+  formData.append(FIELD_COMPANY, vcardData.company || 'unspecified');
+  formData.append(FIELD_TITLE, vcardData.title || 'unspecified');
 
   fetch(GOOGLE_FORM_RESPONSE_URL, {
     method: "POST",
